@@ -1117,7 +1117,7 @@ if [[ "${VIDEOFORMAT}" == "Transcode"* ]]; then
   else
     THREADSCMD="-threads ${THREADS}"
   fi
-      echo ${THREADSCMD}			#this is for testing
+#  echo ${THREADSCMD}			#this is for testing
       
 	if [[ "${VIDEOFORMAT}" == *"x265"* ]]; then
 		VFORMAT=265
