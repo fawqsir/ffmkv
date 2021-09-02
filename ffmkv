@@ -1152,22 +1152,27 @@ if [[ "${VIDEOFORMAT}" == "Transcode"* ]]; then
 		VFORMAT=hevc
 	fi
 
-# Need to add -hwaccel cuda -hwaccel_output_format cuda when SDR is applied only on a 
-
+	# add -hwaccel cuda -hwaccel_output_format cuda when SDR is applied only on a 
+	if f [ -n "${SDR}" ] && [ "${VIDEOFORMAT}" == *"nvenc"* ]; then
+	  HWACCELL="-hwaccel cuda -hwaccel_output_format cuda"
+	else
+	  HWACCELL=""
+	fi
+	
 	if [[ "${VIDEOFORMAT}" == *"variable bitrate" ]]; then
 		if [ -n "${PARAMS}" ]; then
 			PARAMS=":${PARAMS}"
 		fi
 		trans() {
-			echo ffmpeg ${START} -y -vsync 0 -i "$1" ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${FPSCMD} -x${VFORMAT}-params "pass=1${PARAMS}" ${VIDEOFILTERS} -max_muxing_queue_size 9999 -an -f matroska /dev/null
-			eval ffmpeg ${START} -y -vsync 0 -i '"$1"' ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${FPSCMD} -x${VFORMAT}-params "pass=1${PARAMS}" ${VIDEOFILTERS} -max_muxing_queue_size 9999 -an -f matroska /dev/null
+			echo ffmpeg ${START} -y ${HWACCELL} -vsync 0 -i "$1" ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${FPSCMD} -x${VFORMAT}-params "pass=1${PARAMS}" ${VIDEOFILTERS} -max_muxing_queue_size 9999 -an -f matroska /dev/null
+			eval ffmpeg ${START} -y ${HWACCELL} -vsync 0 -i '"$1"' ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${FPSCMD} -x${VFORMAT}-params "pass=1${PARAMS}" ${VIDEOFILTERS} -max_muxing_queue_size 9999 -an -f matroska /dev/null
 		}
 		echo "Processing pass 1 of VBR video, remaining time is remaining time for pass 1 only."
 		echo "Process will sit on 100% while ffmpeg closes out functions."
 		convertFile "$1" "$2" Pass1
 		trans() {
-			echo ffmpeg ${START} -vsync 0 -i "$1" ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${FPSCMD} -x${VFORMAT}-params "pass=2${PARAMS}" ${VIDEOFILTERS} -max_muxing_queue_size 9999 ${AUDIOCMD} "$2"
-			eval ffmpeg ${START} -vsync 0 -i '"$1"' ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${FPSCMD} -x${VFORMAT}-params "pass=2${PARAMS}" ${VIDEOFILTERS} -max_muxing_queue_size 9999 ${AUDIOCMD} '"$2"'
+			echo ffmpeg ${START} ${HWACCELL} -vsync 0 -i "$1" ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${FPSCMD} -x${VFORMAT}-params "pass=2${PARAMS}" ${VIDEOFILTERS} -max_muxing_queue_size 9999 ${AUDIOCMD} "$2"
+			eval ffmpeg ${START} ${HWACCELL} -vsync 0 -i '"$1"' ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${FPSCMD} -x${VFORMAT}-params "pass=2${PARAMS}" ${VIDEOFILTERS} -max_muxing_queue_size 9999 ${AUDIOCMD} '"$2"'
 		}
 		echo ""
 		echo "Processing pass 2 of VBR video, remaining time is total remaining time."
@@ -1178,8 +1183,8 @@ if [[ "${VIDEOFORMAT}" == "Transcode"* ]]; then
 			PARAMS="-x${VFORMAT}-params '${PARAMS}'"
 		fi
 		trans() {
-			echo ffmpeg ${START} -vsync 0 -i "$1" ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${FPSCMD} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${PARAMS} ${VIDEOFILTERS} -max_muxing_queue_size 9999 ${AUDIOCMD} "$2"
-			eval ffmpeg ${START} -vsync 0 -i '"$1"' ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${FPSCMD} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${PARAMS} ${VIDEOFILTERS} -max_muxing_queue_size 9999 ${AUDIOCMD} '"$2"'
+			echo ffmpeg ${START} ${HWACCELL} -vsync 0 -i "$1" ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${FPSCMD} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${PARAMS} ${VIDEOFILTERS} -max_muxing_queue_size 9999 ${AUDIOCMD} "$2"
+			eval ffmpeg ${START} ${HWACCELL} -vsync 0 -i '"$1"' ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${FPSCMD} ${THREADSCMD} -c:v libx${VFORMAT} -b:v ${BITRATE}k ${PARAMS} ${VIDEOFILTERS} -max_muxing_queue_size 9999 ${AUDIOCMD} '"$2"'
 		}
 		echo ""
 		echo "Processing pass of CBR video, remaining time is total remaining time."
@@ -1188,8 +1193,8 @@ if [[ "${VIDEOFORMAT}" == "Transcode"* ]]; then
 	fi
 else
 	trans() {
-		echo ffmpeg ${START} -vsync 0 -i "$1" ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${THREADSCMD} -c:v copy -max_muxing_queue_size 9999 ${AUDIOCMD} "$2"
-		eval ffmpeg ${START} -vsync 0 -i '"$1"' ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${THREADSCMD} -c:v copy -max_muxing_queue_size 9999 ${AUDIOCMD} '"$2"'
+		echo ffmpeg ${START} ${HWACCELL} -vsync 0 -i "$1" ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${THREADSCMD} -c:v copy -max_muxing_queue_size 9999 ${AUDIOCMD} "$2"
+		eval ffmpeg ${START} ${HWACCELL} -vsync 0 -i '"$1"' ${LENGTH} -map ${VIDEO} -map ${AUDIO} ${SUB} ${THREADSCMD} -c:v copy -max_muxing_queue_size 9999 ${AUDIOCMD} '"$2"'
 	}
 	echo "Processing a stream copy of video, remaining time is total remaining time."
 	echo "Process will sit on 100% while ffmpeg closes out functions."
