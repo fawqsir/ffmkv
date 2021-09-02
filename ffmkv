@@ -763,6 +763,7 @@ THREADS=${12}
 " > "${13}"
 }
 
+if [ -f "${HOME}/.ffmkv/presets/Up to 1080p, 192k audio, 1GB per hour CBR, SDR" ]; then
 mkPreset \
   "0:0" \
   "0:1" \
@@ -807,6 +808,7 @@ mkPreset \
   "Preserve HDR color" \
   "0" \
   "${HOME}/.ffmkv/presets/Up to 4K, original audio, 4GB per hour VBR, HDR"
+fi
 
 function usage() {
 	echo "Usage: ffmkv [--preset '<preset>'] <input> <ouput>"
