@@ -1158,7 +1158,10 @@ if [[ "${VIDEOFORMAT}" == "Transcode"* ]]; then
 	else
 	  HWACCELL=""
 	fi
-	
+
+#https://docs.nvidia.com/video-technologies/video-codec-sdk/ffmpeg-with-nvidia-gpu/
+#-pix_fmt yuv420p/yuv444p/p010/yuv444p16
+
 	if [[ "${VIDEOFORMAT}" == *"variable bitrate" ]]; then
 		if [ -n "${PARAMS}" ]; then
 			PARAMS=":${PARAMS}"
