@@ -881,11 +881,29 @@ else
 	CURVIDEOBITRATE=""
 fi
 
+# Should have a test for hardware acceleration of cuda, vaapi
+if [ -z "$(lspci -v 2> /dev/null |grep NVIDIA)" ]; then
+  if [ -z "$(ffmpeg -filters 2> /dev/null |grep hevc_nvenc)" ]; then
+  echo "Your ffmpeg does not support hevc_nvenc, please update from https://ffmpeg.org if you need to use Nvidia Encoding"
+  fi
+fi
+#if [ -z "$(ffmpeg -filters 2> /dev/null |grep hevc_vaapi)" ]; then
+#  echo "Your ffmpeg does not support hevc_vaapi, please update from https://ffmpeg.org if you need to use VAAPI Encoding"
+#fi
+
+# Only show viable options
+
 if [ -z "${VIDEOFORMAT}" ]; then
   VIDEOFORMATS=("Transcode to x265 with a 2-pass variable bitrate" \
                 "Transcode to x265 with a 1-pass constant bitrate" \
                 "Transcode to x264 with a 2-pass variable bitrate" \
                 "Transcode to x264 with a 1-pass constant bitrate" \
+		if [ -n "$(lspci -v 2> /dev/null |grep NVIDIA)" ] && [ -n "$(ffmpeg -filters 2> /dev/null |grep hevc_nvenc)" ]; then
+		"Transcode to h264_nvenc with a 2-pass constant bitrate" \
+		"Transcode to h264_nvenc with a 1-pass constant bitrate" \
+		"Transcode to hevc_nvenc with a 2-pass constant bitrate" \
+		"Transcode to hevc_nvenc with a 1-pass constant bitrate" \
+		fi
                 "${SC}")
   menuFromArr VIDEOFORMAT "How would you like to handle video conversion?" "${VIDEOFORMATS[@]}"
 fi
@@ -1118,12 +1136,21 @@ if [[ "${VIDEOFORMAT}" == "Transcode"* ]]; then
     THREADSCMD="-threads ${THREADS}"
   fi
 #  echo ${THREADSCMD}			#this is for testing
-      
+
 	if [[ "${VIDEOFORMAT}" == *"x265"* ]]; then
 		VFORMAT=265
-        else
+        elif [[ "${VIDEOFORMAT}" == *"x264"* ]]; then
 		VFORMAT=264
+	elif [[ "${VIDEOFORMAT}" == *"hevc_nvenc"* ]]; then
+		VFORMAT=hevc_nvenc
+	elif [[ "${VIDEOFORMAT}" == *"h264_nvenc"* ]]; then
+		VFORMAT=h264_nvenc
+	else 
+		VFORMAT=hevc
 	fi
+
+# Need to add -hwaccel cuda -hwaccel_output_format cuda when SDR is applied only on a 
+
 	if [[ "${VIDEOFORMAT}" == *"variable bitrate" ]]; then
 		if [ -n "${PARAMS}" ]; then
 			PARAMS=":${PARAMS}"
