@@ -901,7 +901,7 @@ if [ -z "${VIDEOFORMAT}" ]; then
                 "Transcode to x265 with a 1-pass constant bitrate" \
                 "Transcode to x264 with a 2-pass variable bitrate" \
                 "Transcode to x264 with a 1-pass constant bitrate" \
-		if [ -n "$(lspci -v 2> /dev/null |grep NVIDIA)" ] && [ -n "$(ffmpeg -filters 2> /dev/null |grep hevc_nvenc)" ]; then
+		if [[ -n "$(lspci -v 2> /dev/null |grep NVIDIA)" ] && [ -n "$(ffmpeg -filters 2> /dev/null |grep hevc_nvenc)" ]]; then
 		"Transcode to h264_nvenc with a 2-pass constant bitrate" \
 		"Transcode to h264_nvenc with a 1-pass constant bitrate" \
 		"Transcode to hevc_nvenc with a 2-pass constant bitrate" \
